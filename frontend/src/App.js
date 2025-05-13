@@ -8,7 +8,29 @@ function Home() {
 }
 
 function Products() {
-  return <h2>Products</h2>;
+  const products = [
+    { id: 1, title: 'Golf Club Set', price: 299.99, image: 'https://via.placeholder.com/150?text=Golf+Club+Set' },
+    { id: 2, title: 'Golf Balls (12 Pack)', price: 24.99, image: 'https://via.placeholder.com/150?text=Golf+Balls' },
+    { id: 3, title: 'Golf Bag', price: 89.99, image: 'https://via.placeholder.com/150?text=Golf+Bag' },
+    { id: 4, title: 'Golf Gloves', price: 19.99, image: 'https://via.placeholder.com/150?text=Golf+Gloves' },
+  ];
+
+  return (
+    <div className="container">
+      <h2>Products</h2>
+      <div className="product-grid">
+        {products.map(product => (
+          <div key={product.id} className="product-card">
+            <img src={product.image} alt={product.title} className="product-image" />
+            <div className="product-info">
+              <h3 className="product-title">{product.title}</h3>
+              <p className="product-price">${product.price}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 function Users() {
