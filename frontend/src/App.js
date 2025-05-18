@@ -113,6 +113,8 @@ function Users() {
 
 function Cart() {
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || []);
+  const [checkedOut, setCheckedOut] = useState(false);
+  const userId = localStorage.getItem('userId');
 
   const updateQuantity = (id, delta) => {
     const newCart = cart.map(item =>
@@ -130,9 +132,28 @@ function Cart() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
+  const handleCheckout = () => {
+    if (!userId) return;
+    // Get existing orders for this user
+    const orders = JSON.parse(localStorage.getItem(`orders_${userId}`)) || [];
+    const newOrder = {
+      id: Date.now().toString(),
+      date: new Date().toISOString().slice(0, 10),
+      items: cart,
+      total,
+    };
+    localStorage.setItem(`orders_${userId}`,
+      JSON.stringify([newOrder, ...orders])
+    );
+    setCart([]);
+    localStorage.setItem('cart', JSON.stringify([]));
+    setCheckedOut(true);
+  };
+
   return (
     <div className="container">
       <h2>Your Cart</h2>
+      {checkedOut && <div style={{ color: 'green', marginBottom: 10 }}>Order placed successfully!</div>}
       {cart.length === 0 ? <p>Your cart is empty.</p> : (
         <table style={{ width: '100%', background: 'white', borderRadius: 8, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
           <thead>
@@ -162,6 +183,12 @@ function Cart() {
         </table>
       )}
       <h3 style={{ textAlign: 'right', marginTop: 20 }}>Total: ${total.toFixed(2)}</h3>
+      {userId && cart.length > 0 && (
+        <button style={{ float: 'right', marginTop: 20 }} onClick={handleCheckout}>Checkout</button>
+      )}
+      {!userId && cart.length > 0 && (
+        <p style={{ color: 'red', textAlign: 'right', marginTop: 20 }}>Please log in to place your order.</p>
+      )}
     </div>
   );
 }
@@ -244,30 +271,19 @@ function Protected() {
 }
 
 function OrderHistory() {
-  // Mock order history data
-  const orders = [
-    {
-      id: '1001',
-      date: '2024-06-01',
-      items: [
-        { title: 'Golf Club Set', quantity: 1, price: 299.99 },
-        { title: 'Golf Balls (12 Pack)', quantity: 2, price: 24.99 },
-      ],
-      total: 349.97,
-    },
-    {
-      id: '1002',
-      date: '2024-05-15',
-      items: [
-        { title: 'Golf Bag', quantity: 1, price: 89.99 },
-      ],
-      total: 89.99,
-    },
-  ];
+  const userId = localStorage.getItem('userId');
+  const [orders, setOrders] = useState([]);
+
+  useEffect(() => {
+    if (userId) {
+      setOrders(JSON.parse(localStorage.getItem(`orders_${userId}`)) || []);
+    }
+  }, [userId]);
+
   return (
     <div className="container">
       <h2 tabIndex={0}>Order History</h2>
-      {orders.map(order => (
+      {orders.length === 0 ? <p>No orders found.</p> : orders.map(order => (
         <div key={order.id} style={{ background: 'white', margin: '1rem 0', padding: '1rem', borderRadius: 8 }}>
           <h3>Order #{order.id} <span style={{ fontWeight: 'normal', color: '#888', fontSize: '0.9em' }}>({order.date})</span></h3>
           <ul>
