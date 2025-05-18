@@ -243,7 +243,100 @@ function Protected() {
   return <h2>Protected Page</h2>;
 }
 
+function OrderHistory() {
+  // Mock order history data
+  const orders = [
+    {
+      id: '1001',
+      date: '2024-06-01',
+      items: [
+        { title: 'Golf Club Set', quantity: 1, price: 299.99 },
+        { title: 'Golf Balls (12 Pack)', quantity: 2, price: 24.99 },
+      ],
+      total: 349.97,
+    },
+    {
+      id: '1002',
+      date: '2024-05-15',
+      items: [
+        { title: 'Golf Bag', quantity: 1, price: 89.99 },
+      ],
+      total: 89.99,
+    },
+  ];
+  return (
+    <div className="container">
+      <h2 tabIndex={0}>Order History</h2>
+      {orders.map(order => (
+        <div key={order.id} style={{ background: 'white', margin: '1rem 0', padding: '1rem', borderRadius: 8 }}>
+          <h3>Order #{order.id} <span style={{ fontWeight: 'normal', color: '#888', fontSize: '0.9em' }}>({order.date})</span></h3>
+          <ul>
+            {order.items.map((item, idx) => (
+              <li key={idx}>{item.title} x{item.quantity} - ${item.price}</li>
+            ))}
+          </ul>
+          <strong>Total: ${order.total.toFixed(2)}</strong>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Profile() {
+  // Mock user profile data
+  const [profile, setProfile] = useState({ username: 'golfuser', email: 'golfuser@example.com' });
+  const [edit, setEdit] = useState(false);
+  const [form, setForm] = useState(profile);
+
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+  const handleSave = () => {
+    setProfile(form);
+    setEdit(false);
+  };
+
+  return (
+    <div className="container">
+      <h2 tabIndex={0}>Profile</h2>
+      {edit ? (
+        <div>
+          <label>Username: <input name="username" value={form.username} onChange={handleChange} /></label><br />
+          <label>Email: <input name="email" value={form.email} onChange={handleChange} /></label><br />
+          <button onClick={handleSave}>Save</button>
+        </div>
+      ) : (
+        <div>
+          <p><strong>Username:</strong> {profile.username}</p>
+          <p><strong>Email:</strong> {profile.email}</p>
+          <button onClick={() => setEdit(true)}>Edit</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Helper to check if user is logged in
+function isLoggedIn() {
+  return !!localStorage.getItem('userId');
+}
+
 function App() {
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+
+  // Listen for login/logout changes
+  useEffect(() => {
+    const onStorage = () => setLoggedIn(isLoggedIn());
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
+  // Merge guest cart with user cart on login
+  useEffect(() => {
+    if (loggedIn) {
+      // In a real app, merge guest cart with user cart on the server
+      // For now, just keep the localStorage cart
+    }
+  }, [loggedIn]);
+
   return (
     <Router>
       <nav>
@@ -251,8 +344,10 @@ function App() {
           <li><Link to="/">Home</Link></li>
           <li><Link to="/products">Products</Link></li>
           <li><Link to="/cart">Cart</Link></li>
-          <li><Link to="/signup">Signup</Link></li>
-          <li><Link to="/login">Login</Link></li>
+          {!loggedIn && <li><Link to="/signup">Signup</Link></li>}
+          {!loggedIn && <li><Link to="/login">Login</Link></li>}
+          {loggedIn && <li><Link to="/orders">Order History</Link></li>}
+          {loggedIn && <li><Link to="/profile">Profile</Link></li>}
           <li><Link to="/protected">Protected</Link></li>
         </ul>
       </nav>
@@ -260,8 +355,10 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/products" element={<Products />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/signup" element={<Signup />} />
-        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={!loggedIn ? <Signup /> : <Navigate to="/" />} />
+        <Route path="/login" element={!loggedIn ? <Login /> : <Navigate to="/" />} />
+        <Route path="/orders" element={loggedIn ? <OrderHistory /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={loggedIn ? <Profile /> : <Navigate to="/login" />} />
         <Route path="/protected" element={<Protected />} />
       </Routes>
     </Router>
