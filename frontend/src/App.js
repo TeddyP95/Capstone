@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import logo from './logo.svg';
 import './App.css';
 
@@ -191,7 +191,7 @@ function Signup() {
       <h2>Signup</h2>
       <form onSubmit={handleSubmit}>
         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
+        <input type="password" placeholder="Password" value={password} onChange={(e.target.value)} />
         <button type="submit">Signup</button>
       </form>
       {message && <p>{message}</p>}
@@ -282,21 +282,30 @@ function OrderHistory() {
   );
 }
 
-function Profile() {
+function Profile({ setUsername }) {
   // Mock user profile data
   const [profile, setProfile] = useState({ username: 'golfuser', email: 'golfuser@example.com' });
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState(profile);
+  const [success, setSuccess] = useState(false);
+  const location = useLocation();
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
   const handleSave = () => {
     setProfile(form);
     setEdit(false);
+    setSuccess(true);
+    setUsername(form.username);
+    setTimeout(() => setSuccess(false), 2000);
   };
+
+  // Helper for active nav link
+  const isActive = (path) => location.pathname === path;
 
   return (
     <div className="container">
       <h2 tabIndex={0}>Profile</h2>
+      {success && <div style={{ color: 'green', marginBottom: 10 }}>Profile updated!</div>}
       {edit ? (
         <div>
           <label>Username: <input name="username" value={form.username} onChange={handleChange} /></label><br />
@@ -321,6 +330,8 @@ function isLoggedIn() {
 
 function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
+  const [username, setUsername] = useState('golfuser');
+  const location = useLocation();
 
   // Listen for login/logout changes
   useEffect(() => {
@@ -337,19 +348,39 @@ function App() {
     }
   }, [loggedIn]);
 
+  // Logout handler
+  const handleLogout = () => {
+    localStorage.removeItem('userId');
+    setLoggedIn(false);
+  };
+
+  // Helper for active nav link
+  const isActive = (path) => location.pathname === path;
+
   return (
     <Router>
       <nav>
         <ul>
-          <li><Link to="/">Home</Link></li>
-          <li><Link to="/products">Products</Link></li>
-          <li><Link to="/cart">Cart</Link></li>
-          {!loggedIn && <li><Link to="/signup">Signup</Link></li>}
-          {!loggedIn && <li><Link to="/login">Login</Link></li>}
-          {loggedIn && <li><Link to="/orders">Order History</Link></li>}
-          {loggedIn && <li><Link to="/profile">Profile</Link></li>}
-          <li><Link to="/protected">Protected</Link></li>
+          <li><Link to="/" className={isActive('/') ? 'active-nav' : ''}>Home</Link></li>
+          <li><Link to="/products" className={isActive('/products') ? 'active-nav' : ''}>Products</Link></li>
+          <li><Link to="/cart" className={isActive('/cart') ? 'active-nav' : ''}>Cart</Link></li>
+          {!loggedIn && <li><Link to="/signup" className={isActive('/signup') ? 'active-nav' : ''}>Signup</Link></li>}
+          {!loggedIn && <li><Link to="/login" className={isActive('/login') ? 'active-nav' : ''}>Login</Link></li>}
+          {loggedIn && <li><Link to="/orders" className={isActive('/orders') ? 'active-nav' : ''}>Order History</Link></li>}
+          {loggedIn && <li><Link to="/profile" className={isActive('/profile') ? 'active-nav' : ''}>Profile</Link></li>}
+          <li><Link to="/protected" className={isActive('/protected') ? 'active-nav' : ''}>Protected</Link></li>
+          {loggedIn && (
+            <li>
+              <button onClick={handleLogout} style={{ background: 'none', border: 'none', color: '#007bff', cursor: 'pointer', fontSize: '1em', padding: '15px' }}>Logout</button>
+            </li>
+          )}
         </ul>
+        {loggedIn && (
+          <div style={{ float: 'right', marginRight: 20, fontWeight: 'bold' }}>
+            <span role="img" aria-label="user" style={{ marginRight: 8 }}>👤</span>
+            Welcome, {username}!
+          </div>
+        )}
       </nav>
       <Routes>
         <Route path="/" element={<Home />} />
@@ -358,7 +389,7 @@ function App() {
         <Route path="/signup" element={!loggedIn ? <Signup /> : <Navigate to="/" />} />
         <Route path="/login" element={!loggedIn ? <Login /> : <Navigate to="/" />} />
         <Route path="/orders" element={loggedIn ? <OrderHistory /> : <Navigate to="/login" />} />
-        <Route path="/profile" element={loggedIn ? <Profile /> : <Navigate to="/login" />} />
+        <Route path="/profile" element={loggedIn ? <Profile setUsername={setUsername} /> : <Navigate to="/login" />} />
         <Route path="/protected" element={<Protected />} />
       </Routes>
     </Router>
