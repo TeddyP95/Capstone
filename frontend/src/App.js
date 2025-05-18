@@ -302,15 +302,170 @@ function isAdmin() {
   return localStorage.getItem('isAdmin') === 'true';
 }
 
+function getStoredProducts() {
+  return JSON.parse(localStorage.getItem('admin_products')) || [
+    { id: 1, title: 'Golf Club Set', price: 299.99, image: 'https://via.placeholder.com/150?text=Golf+Club+Set', category: 'Clubs' },
+    { id: 2, title: 'Golf Balls (12 Pack)', price: 24.99, image: 'https://via.placeholder.com/150?text=Golf+Balls', category: 'Balls' },
+    { id: 3, title: 'Golf Bag', price: 89.99, image: 'https://via.placeholder.com/150?text=Golf+Bag', category: 'Bags' },
+    { id: 4, title: 'Golf Gloves', price: 19.99, image: 'https://via.placeholder.com/150?text=Golf+Gloves', category: 'Accessories' },
+    { id: 5, title: 'Golf Shoes', price: 79.99, image: 'https://via.placeholder.com/150?text=Golf+Shoes', category: 'Apparel' },
+    { id: 6, title: 'Golf Hat', price: 14.99, image: 'https://via.placeholder.com/150?text=Golf+Hat', category: 'Apparel' },
+  ];
+}
+function getStoredCategories() {
+  return JSON.parse(localStorage.getItem('admin_categories')) || ['Clubs', 'Balls', 'Bags', 'Accessories', 'Apparel'];
+}
+function setStoredProducts(products) {
+  localStorage.setItem('admin_products', JSON.stringify(products));
+}
+function setStoredCategories(categories) {
+  localStorage.setItem('admin_categories', JSON.stringify(categories));
+}
+
+function AdminProductManagement() {
+  const [products, setProducts] = useState(getStoredProducts());
+  const [categories] = useState(getStoredCategories());
+  const [form, setForm] = useState({ title: '', price: '', image: '', category: categories[0] });
+  const [editId, setEditId] = useState(null);
+
+  const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
+
+  const handleAdd = e => {
+    e.preventDefault();
+    if (!form.title || !form.price || !form.image || !form.category) return;
+    const newProduct = { ...form, id: Date.now(), price: parseFloat(form.price) };
+    const newProducts = [newProduct, ...products];
+    setProducts(newProducts);
+    setStoredProducts(newProducts);
+    setForm({ title: '', price: '', image: '', category: categories[0] });
+  };
+
+  const handleEdit = id => {
+    const prod = products.find(p => p.id === id);
+    setForm(prod);
+    setEditId(id);
+  };
+
+  const handleUpdate = e => {
+    e.preventDefault();
+    const updated = products.map(p => p.id === editId ? { ...form, id: editId, price: parseFloat(form.price) } : p);
+    setProducts(updated);
+    setStoredProducts(updated);
+    setForm({ title: '', price: '', image: '', category: categories[0] });
+    setEditId(null);
+  };
+
+  const handleDelete = id => {
+    const filtered = products.filter(p => p.id !== id);
+    setProducts(filtered);
+    setStoredProducts(filtered);
+  };
+
+  return (
+    <div className="container">
+      <h2>Product Management</h2>
+      <form onSubmit={editId ? handleUpdate : handleAdd} style={{ marginBottom: 20 }}>
+        <input name="title" placeholder="Title" value={form.title} onChange={handleChange} />
+        <input name="price" placeholder="Price" type="number" value={form.price} onChange={handleChange} />
+        <input name="image" placeholder="Image URL" value={form.image} onChange={handleChange} />
+        <select name="category" value={form.category} onChange={handleChange}>
+          {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+        </select>
+        <button type="submit">{editId ? 'Update' : 'Add'} Product</button>
+        {editId && <button type="button" onClick={() => { setEditId(null); setForm({ title: '', price: '', image: '', category: categories[0] }); }}>Cancel</button>}
+      </form>
+      <div className="product-grid">
+        {products.map(product => (
+          <div key={product.id} className="product-card">
+            <img src={product.image} alt={product.title} className="product-image" />
+            <div className="product-info">
+              <h3 className="product-title">{product.title}</h3>
+              <p className="product-price">${product.price}</p>
+              <p style={{ fontSize: '0.9em', color: '#888' }}>{product.category}</p>
+              <button onClick={() => handleEdit(product.id)}>Edit</button>
+              <button onClick={() => handleDelete(product.id)} style={{ marginLeft: 8, color: 'red' }}>Delete</button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AdminCategoryManagement() {
+  const [categories, setCategories] = useState(getStoredCategories());
+  const [input, setInput] = useState('');
+  const [editIdx, setEditIdx] = useState(null);
+  const [editValue, setEditValue] = useState('');
+
+  const handleAdd = e => {
+    e.preventDefault();
+    if (!input || categories.includes(input)) return;
+    const newCats = [...categories, input];
+    setCategories(newCats);
+    setStoredCategories(newCats);
+    setInput('');
+  };
+
+  const handleEdit = idx => {
+    setEditIdx(idx);
+    setEditValue(categories[idx]);
+  };
+
+  const handleUpdate = e => {
+    e.preventDefault();
+    const updated = categories.map((cat, idx) => idx === editIdx ? editValue : cat);
+    setCategories(updated);
+    setStoredCategories(updated);
+    setEditIdx(null);
+    setEditValue('');
+  };
+
+  const handleDelete = idx => {
+    const filtered = categories.filter((_, i) => i !== idx);
+    setCategories(filtered);
+    setStoredCategories(filtered);
+  };
+
+  return (
+    <div className="container">
+      <h2>Category Management</h2>
+      <form onSubmit={editIdx !== null ? handleUpdate : handleAdd} style={{ marginBottom: 20 }}>
+        {editIdx !== null ? (
+          <>
+            <input value={editValue} onChange={e => setEditValue(e.target.value)} />
+            <button type="submit">Update</button>
+            <button type="button" onClick={() => { setEditIdx(null); setEditValue(''); }}>Cancel</button>
+          </>
+        ) : (
+          <>
+            <input value={input} onChange={e => setInput(e.target.value)} placeholder="New Category" />
+            <button type="submit">Add Category</button>
+          </>
+        )}
+      </form>
+      <ul>
+        {categories.map((cat, idx) => (
+          <li key={cat} style={{ marginBottom: 8 }}>
+            {cat}
+            <button style={{ marginLeft: 8 }} onClick={() => handleEdit(idx)}>Edit</button>
+            <button style={{ marginLeft: 8, color: 'red' }} onClick={() => handleDelete(idx)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
 function AdminDashboard() {
-  // For now, just show a summary and links to admin features
   return (
     <div className="container">
       <h2>Admin Dashboard</h2>
       <div style={{ background: 'white', padding: 20, borderRadius: 8, marginBottom: 20 }}>
         <h3>Welcome, Admin!</h3>
         <ul>
-          <li><strong>Product Management</strong> (coming soon)</li>
+          <li><Link to="/admin/products">Product Management</Link></li>
+          <li><Link to="/admin/categories">Category Management</Link></li>
           <li><strong>Order Management</strong> (coming soon)</li>
           <li><strong>User Management</strong> (coming soon)</li>
         </ul>
@@ -446,6 +601,8 @@ function App() {
         <Route path="/profile" element={loggedIn ? <Profile setUsername={setUsername} /> : <Navigate to="/login" />} />
         <Route path="/admin" element={admin ? <AdminDashboard /> : <Navigate to="/" />} />
         <Route path="/protected" element={<Protected />} />
+        <Route path="/admin/products" element={admin ? <AdminProductManagement /> : <Navigate to="/" />} />
+        <Route path="/admin/categories" element={admin ? <AdminCategoryManagement /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
