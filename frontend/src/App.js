@@ -298,12 +298,34 @@ function OrderHistory() {
   );
 }
 
+function isAdmin() {
+  return localStorage.getItem('isAdmin') === 'true';
+}
+
+function AdminDashboard() {
+  // For now, just show a summary and links to admin features
+  return (
+    <div className="container">
+      <h2>Admin Dashboard</h2>
+      <div style={{ background: 'white', padding: 20, borderRadius: 8, marginBottom: 20 }}>
+        <h3>Welcome, Admin!</h3>
+        <ul>
+          <li><strong>Product Management</strong> (coming soon)</li>
+          <li><strong>Order Management</strong> (coming soon)</li>
+          <li><strong>User Management</strong> (coming soon)</li>
+        </ul>
+      </div>
+    </div>
+  );
+}
+
 function Profile({ setUsername }) {
   // Mock user profile data
   const [profile, setProfile] = useState({ username: 'golfuser', email: 'golfuser@example.com' });
   const [edit, setEdit] = useState(false);
   const [form, setForm] = useState(profile);
   const [success, setSuccess] = useState(false);
+  const [admin, setAdmin] = useState(isAdmin());
   const location = useLocation();
 
   const handleChange = e => setForm({ ...form, [e.target.name]: e.target.value });
@@ -313,6 +335,11 @@ function Profile({ setUsername }) {
     setSuccess(true);
     setUsername(form.username);
     setTimeout(() => setSuccess(false), 2000);
+  };
+
+  const promoteToAdmin = () => {
+    localStorage.setItem('isAdmin', 'true');
+    setAdmin(true);
   };
 
   // Helper for active nav link
@@ -333,6 +360,10 @@ function Profile({ setUsername }) {
           <p><strong>Username:</strong> {profile.username}</p>
           <p><strong>Email:</strong> {profile.email}</p>
           <button onClick={() => setEdit(true)}>Edit</button>
+          {!admin && (
+            <button style={{ marginLeft: 10 }} onClick={promoteToAdmin}>Promote to Admin</button>
+          )}
+          {admin && <span style={{ marginLeft: 10, color: '#007bff', fontWeight: 'bold' }}>Admin</span>}
         </div>
       )}
     </div>
@@ -348,10 +379,14 @@ function App() {
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [username, setUsername] = useState('golfuser');
   const location = useLocation();
+  const [admin, setAdmin] = useState(isAdmin());
 
-  // Listen for login/logout changes
+  // Listen for login/logout/admin changes
   useEffect(() => {
-    const onStorage = () => setLoggedIn(isLoggedIn());
+    const onStorage = () => {
+      setLoggedIn(isLoggedIn());
+      setAdmin(isAdmin());
+    };
     window.addEventListener('storage', onStorage);
     return () => window.removeEventListener('storage', onStorage);
   }, []);
@@ -367,7 +402,9 @@ function App() {
   // Logout handler
   const handleLogout = () => {
     localStorage.removeItem('userId');
+    localStorage.removeItem('isAdmin');
     setLoggedIn(false);
+    setAdmin(false);
   };
 
   // Helper for active nav link
@@ -384,6 +421,7 @@ function App() {
           {!loggedIn && <li><Link to="/login" className={isActive('/login') ? 'active-nav' : ''}>Login</Link></li>}
           {loggedIn && <li><Link to="/orders" className={isActive('/orders') ? 'active-nav' : ''}>Order History</Link></li>}
           {loggedIn && <li><Link to="/profile" className={isActive('/profile') ? 'active-nav' : ''}>Profile</Link></li>}
+          {admin && <li><Link to="/admin" className={isActive('/admin') ? 'active-nav' : ''}>Admin Dashboard</Link></li>}
           <li><Link to="/protected" className={isActive('/protected') ? 'active-nav' : ''}>Protected</Link></li>
           {loggedIn && (
             <li>
@@ -406,6 +444,7 @@ function App() {
         <Route path="/login" element={!loggedIn ? <Login /> : <Navigate to="/" />} />
         <Route path="/orders" element={loggedIn ? <OrderHistory /> : <Navigate to="/login" />} />
         <Route path="/profile" element={loggedIn ? <Profile setUsername={setUsername} /> : <Navigate to="/login" />} />
+        <Route path="/admin" element={admin ? <AdminDashboard /> : <Navigate to="/" />} />
         <Route path="/protected" element={<Protected />} />
       </Routes>
     </Router>
