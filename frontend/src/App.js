@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate } from 'react-router-dom';
 import logo from './logo.svg';
 import './App.css';
@@ -16,10 +16,29 @@ function Products() {
     { id: 5, title: 'Golf Shoes', price: 79.99, image: 'https://via.placeholder.com/150?text=Golf+Shoes', category: 'Apparel' },
     { id: 6, title: 'Golf Hat', price: 14.99, image: 'https://via.placeholder.com/150?text=Golf+Hat', category: 'Apparel' },
   ];
-  const [products] = useState(initialProducts);
+  const [products, setProducts] = useState([]);
   const [sort, setSort] = useState('');
   const [filter, setFilter] = useState('');
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || []);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Simulate fetching products with a delay
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    const timer = setTimeout(() => {
+      // Simulate error 10% of the time
+      if (Math.random() < 0.1) {
+        setError('Failed to load products. Please try again.');
+        setLoading(false);
+      } else {
+        setProducts(initialProducts);
+        setLoading(false);
+      }
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Sorting
   const sortedProducts = [...products].sort((a, b) => {
@@ -45,15 +64,15 @@ function Products() {
   };
 
   // Category options
-  const categories = Array.from(new Set(products.map(p => p.category)));
+  const categories = Array.from(new Set(initialProducts.map(p => p.category)));
 
   return (
-    <div className="container">
-      <h2>Products</h2>
+    <div className="container" aria-live="polite">
+      <h2 tabIndex={0}>Products</h2>
       <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <label>
           Sort by:
-          <select value={sort} onChange={e => setSort(e.target.value)}>
+          <select value={sort} onChange={e => setSort(e.target.value)} aria-label="Sort products">
             <option value="">None</option>
             <option value="name">Name</option>
             <option value="price">Price</option>
@@ -61,25 +80,29 @@ function Products() {
         </label>
         <label>
           Filter by Category:
-          <select value={filter} onChange={e => setFilter(e.target.value)}>
+          <select value={filter} onChange={e => setFilter(e.target.value)} aria-label="Filter products by category">
             <option value="">All</option>
             {categories.map(cat => <option key={cat} value={cat}>{cat}</option>)}
           </select>
         </label>
       </div>
-      <div className="product-grid">
-        {filteredProducts.map(product => (
-          <div key={product.id} className="product-card">
-            <img src={product.image} alt={product.title} className="product-image" />
-            <div className="product-info">
-              <h3 className="product-title">{product.title}</h3>
-              <p className="product-price">${product.price}</p>
-              <p style={{ fontSize: '0.9em', color: '#888' }}>{product.category}</p>
-              <button onClick={() => addToCart(product)}>Add to Cart</button>
+      {loading && <div role="status" aria-busy="true" style={{textAlign:'center',margin:'2rem'}}><span>Loading products...</span></div>}
+      {error && <div role="alert" style={{color:'red',textAlign:'center',margin:'2rem'}}>{error}</div>}
+      {!loading && !error && (
+        <div className="product-grid">
+          {filteredProducts.map(product => (
+            <div key={product.id} className="product-card" tabIndex={0} aria-label={`Product: ${product.title}, Price: $${product.price}, Category: ${product.category}`}>
+              <img src={product.image} alt={product.title} className="product-image" />
+              <div className="product-info">
+                <h3 className="product-title">{product.title}</h3>
+                <p className="product-price">${product.price}</p>
+                <p style={{ fontSize: '0.9em', color: '#888' }}>{product.category}</p>
+                <button onClick={() => addToCart(product)} aria-label={`Add ${product.title} to cart`}>Add to Cart</button>
+              </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
