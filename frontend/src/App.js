@@ -196,18 +196,21 @@ function Cart() {
 function Signup() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
-      });
-      const data = await response.json();
-      setMessage(data.message);
+      // Store user in localStorage
+      const users = getAllUsers();
+      if (users.find(u => u.username === username)) {
+        setMessage('Username already exists');
+        return;
+      }
+      const newUser = { id: Date.now().toString(), username, password, email, isAdmin: false };
+      setAllUsers([newUser, ...users]);
+      setMessage('User created');
     } catch (error) {
       setMessage('Error signing up');
     }
@@ -218,7 +221,8 @@ function Signup() {
       <h2>Signup</h2>
       <form onSubmit={handleSubmit}>
         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
-        <input type="password" placeholder="Password" value={password} onChange={(e.target.value)} />
+        <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
+        <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button type="submit">Signup</button>
       </form>
       {message && <p>{message}</p>}
@@ -524,6 +528,64 @@ function AdminOrderManagement() {
   );
 }
 
+function getAllUsers() {
+  return JSON.parse(localStorage.getItem('users')) || [];
+}
+function setAllUsers(users) {
+  localStorage.setItem('users', JSON.stringify(users));
+}
+function AdminUserManagement() {
+  const [users, setUsers] = useState(getAllUsers());
+
+  const handlePromote = (id) => {
+    const updated = users.map(u => u.id === id ? { ...u, isAdmin: true } : u);
+    setUsers(updated);
+    setAllUsers(updated);
+  };
+  const handleDemote = (id) => {
+    const updated = users.map(u => u.id === id ? { ...u, isAdmin: false } : u);
+    setUsers(updated);
+    setAllUsers(updated);
+  };
+  const handleDelete = (id) => {
+    const updated = users.filter(u => u.id !== id);
+    setUsers(updated);
+    setAllUsers(updated);
+  };
+
+  return (
+    <div className="container">
+      <h2>User Management</h2>
+      {users.length === 0 ? <p>No users found.</p> : (
+        <table style={{ width: '100%', background: 'white', borderRadius: 8, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
+          <thead>
+            <tr>
+              <th>Username</th>
+              <th>Email</th>
+              <th>Admin</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {users.map(user => (
+              <tr key={user.id}>
+                <td>{user.username}</td>
+                <td>{user.email}</td>
+                <td>{user.isAdmin ? 'Yes' : 'No'}</td>
+                <td>
+                  {!user.isAdmin && <button onClick={() => handlePromote(user.id)}>Promote</button>}
+                  {user.isAdmin && <button onClick={() => handleDemote(user.id)}>Demote</button>}
+                  <button style={{ color: 'red', marginLeft: 8 }} onClick={() => handleDelete(user.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+}
+
 function AdminDashboard() {
   return (
     <div className="container">
@@ -534,7 +596,7 @@ function AdminDashboard() {
           <li><Link to="/admin/products">Product Management</Link></li>
           <li><Link to="/admin/categories">Category Management</Link></li>
           <li><Link to="/admin/orders">Order Management</Link></li>
-          <li><strong>User Management</strong> (coming soon)</li>
+          <li><Link to="/admin/users">User Management</Link></li>
         </ul>
       </div>
     </div>
@@ -671,6 +733,7 @@ function App() {
         <Route path="/admin/products" element={admin ? <AdminProductManagement /> : <Navigate to="/" />} />
         <Route path="/admin/categories" element={admin ? <AdminCategoryManagement /> : <Navigate to="/" />} />
         <Route path="/admin/orders" element={admin ? <AdminOrderManagement /> : <Navigate to="/" />} />
+        <Route path="/admin/users" element={admin ? <AdminUserManagement /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
