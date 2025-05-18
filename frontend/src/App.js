@@ -457,6 +457,73 @@ function AdminCategoryManagement() {
   );
 }
 
+function getAllOrders() {
+  // Find all keys that start with 'orders_'
+  const orders = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key.startsWith('orders_')) {
+      const userId = key.replace('orders_', '');
+      const userOrders = JSON.parse(localStorage.getItem(key)) || [];
+      userOrders.forEach(order => orders.push({ ...order, userId }));
+    }
+  }
+  return orders;
+}
+function setOrderStatus(userId, orderId, status) {
+  const orders = JSON.parse(localStorage.getItem(`orders_${userId}`)) || [];
+  const updated = orders.map(order => order.id === orderId ? { ...order, status } : order);
+  localStorage.setItem(`orders_${userId}`, JSON.stringify(updated));
+}
+
+function AdminOrderManagement() {
+  const [orders, setOrders] = useState(getAllOrders());
+  const [filter, setFilter] = useState('');
+
+  useEffect(() => {
+    setOrders(getAllOrders());
+  }, []);
+
+  const handleStatusChange = (userId, orderId, status) => {
+    setOrderStatus(userId, orderId, status);
+    setOrders(getAllOrders());
+  };
+
+  const filteredOrders = filter ? orders.filter(order => order.status === filter) : orders;
+  const statusOptions = ['Created', 'Processing', 'Cancelled', 'Completed'];
+
+  return (
+    <div className="container">
+      <h2>Order Management</h2>
+      <label>
+        Filter by Status:
+        <select value={filter} onChange={e => setFilter(e.target.value)}>
+          <option value="">All</option>
+          {statusOptions.map(status => <option key={status} value={status}>{status}</option>)}
+        </select>
+      </label>
+      {filteredOrders.length === 0 ? <p>No orders found.</p> : filteredOrders.map(order => (
+        <div key={order.id} style={{ background: 'white', margin: '1rem 0', padding: '1rem', borderRadius: 8 }}>
+          <h3>Order #{order.id} <span style={{ fontWeight: 'normal', color: '#888', fontSize: '0.9em' }}>({order.date})</span></h3>
+          <p><strong>User ID:</strong> {order.userId}</p>
+          <ul>
+            {order.items.map((item, idx) => (
+              <li key={idx}>{item.title} x{item.quantity} - ${item.price}</li>
+            ))}
+          </ul>
+          <strong>Total: ${order.total.toFixed(2)}</strong>
+          <div style={{ marginTop: 10 }}>
+            <label>Status: </label>
+            <select value={order.status || 'Created'} onChange={e => handleStatusChange(order.userId, order.id, e.target.value)}>
+              {statusOptions.map(status => <option key={status} value={status}>{status}</option>)}
+            </select>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function AdminDashboard() {
   return (
     <div className="container">
@@ -466,7 +533,7 @@ function AdminDashboard() {
         <ul>
           <li><Link to="/admin/products">Product Management</Link></li>
           <li><Link to="/admin/categories">Category Management</Link></li>
-          <li><strong>Order Management</strong> (coming soon)</li>
+          <li><Link to="/admin/orders">Order Management</Link></li>
           <li><strong>User Management</strong> (coming soon)</li>
         </ul>
       </div>
@@ -603,6 +670,7 @@ function App() {
         <Route path="/protected" element={<Protected />} />
         <Route path="/admin/products" element={admin ? <AdminProductManagement /> : <Navigate to="/" />} />
         <Route path="/admin/categories" element={admin ? <AdminCategoryManagement /> : <Navigate to="/" />} />
+        <Route path="/admin/orders" element={admin ? <AdminOrderManagement /> : <Navigate to="/" />} />
       </Routes>
     </Router>
   );
