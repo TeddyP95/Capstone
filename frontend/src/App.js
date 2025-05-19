@@ -691,6 +691,15 @@ function isLoggedIn() {
 }
 
 function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
+  );
+}
+
+function AppContent() {
+  // Move all logic from App here, including useLocation and hooks
   const [loggedIn, setLoggedIn] = useState(isLoggedIn());
   const [username, setUsername] = useState('golfuser');
   const location = useLocation();
@@ -726,7 +735,7 @@ function App() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <Router>
+    <>
       <nav>
         <ul>
           <li><Link to="/" className={isActive('/') ? 'active-nav' : ''}>Home</Link></li>
@@ -760,13 +769,13 @@ function App() {
         <Route path="/orders" element={loggedIn ? <OrderHistory /> : <Navigate to="/login" />} />
         <Route path="/profile" element={loggedIn ? <Profile setUsername={setUsername} /> : <Navigate to="/login" />} />
         <Route path="/admin" element={admin ? <AdminDashboard /> : <Navigate to="/" />} />
-        <Route path="/protected" element={<Protected />} />
         <Route path="/admin/products" element={admin ? <AdminProductManagement /> : <Navigate to="/" />} />
         <Route path="/admin/categories" element={admin ? <AdminCategoryManagement /> : <Navigate to="/" />} />
         <Route path="/admin/orders" element={admin ? <AdminOrderManagement /> : <Navigate to="/" />} />
         <Route path="/admin/users" element={admin ? <AdminUserManagement /> : <Navigate to="/" />} />
+        <Route path="/protected" element={<Protected />} />
       </Routes>
-    </Router>
+    </>
   );
 }
 
