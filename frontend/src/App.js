@@ -5,7 +5,13 @@ import './App.css';
 import { loadStripe } from '@stripe/stripe-js';
 
 function Home() {
-  return <h2>Home</h2>;
+  return (
+    <div className="home-hero">
+      <div className="home-hero-overlay">
+        <h1>Welcome to Teddy's Golf Store</h1>
+      </div>
+    </div>
+  );
 }
 
 function Products() {
