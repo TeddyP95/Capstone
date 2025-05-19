@@ -1,8 +1,10 @@
 import express from 'express';
 import cors from 'cors';
+import Stripe from 'stripe';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
+const stripe = new Stripe('sk_test_placeholder_secret_key');
 
 app.use(cors());
 app.use(express.json());
@@ -64,6 +66,34 @@ app.post('/api/login', (req, res) => {
 // Protected route example (logged-in users only)
 app.get('/api/protected', isLoggedIn, (req, res) => {
   res.json({ message: 'This is a protected route', userId: req.userId });
+});
+
+app.post('/api/create-checkout-session', async (req, res) => {
+  const { cart, userId } = req.body;
+  if (!cart || !Array.isArray(cart) || cart.length === 0) {
+    return res.status(400).json({ error: 'Cart is empty' });
+  }
+  try {
+    const line_items = cart.map(item => ({
+      price_data: {
+        currency: 'usd',
+        product_data: { name: item.title },
+        unit_amount: Math.round(item.price * 100),
+      },
+      quantity: item.quantity,
+    }));
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items,
+      mode: 'payment',
+      success_url: 'http://localhost:3000/cart?success=true',
+      cancel_url: 'http://localhost:3000/cart?canceled=true',
+      metadata: { userId: userId || '' },
+    });
+    res.json({ url: session.url });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
 app.listen(PORT, () => {

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
 import logo from './logo.svg';
 import './App.css';
+import { loadStripe } from '@stripe/stripe-js';
 
 function Home() {
   return <h2>Home</h2>;
@@ -115,6 +116,8 @@ function Cart() {
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || []);
   const [checkedOut, setCheckedOut] = useState(false);
   const userId = localStorage.getItem('userId');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const updateQuantity = (id, delta) => {
     const newCart = cart.map(item =>
@@ -150,10 +153,33 @@ function Cart() {
     setCheckedOut(true);
   };
 
+  const handleStripeCheckout = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cart, userId }),
+      });
+      const data = await response.json();
+      if (data.url) {
+        window.location = data.url;
+      } else {
+        setError(data.error || 'Stripe session error');
+      }
+    } catch (err) {
+      setError('Stripe checkout failed');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="container">
       <h2>Your Cart</h2>
       {checkedOut && <div style={{ color: 'green', marginBottom: 10 }}>Order placed successfully!</div>}
+      {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
       {cart.length === 0 ? <p>Your cart is empty.</p> : (
         <table style={{ width: '100%', background: 'white', borderRadius: 8, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
           <thead>
@@ -184,7 +210,12 @@ function Cart() {
       )}
       <h3 style={{ textAlign: 'right', marginTop: 20 }}>Total: ${total.toFixed(2)}</h3>
       {userId && cart.length > 0 && (
-        <button style={{ float: 'right', marginTop: 20 }} onClick={handleCheckout}>Checkout</button>
+        <>
+          <button style={{ float: 'right', marginTop: 20, marginLeft: 10 }} onClick={handleCheckout}>Checkout (Local)</button>
+          <button style={{ float: 'right', marginTop: 20 }} onClick={handleStripeCheckout} disabled={loading}>
+            {loading ? 'Redirecting...' : 'Pay with Card'}
+          </button>
+        </>
       )}
       {!userId && cart.length > 0 && (
         <p style={{ color: 'red', textAlign: 'right', marginTop: 20 }}>Please log in to place your order.</p>
