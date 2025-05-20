@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import Stripe from 'stripe';
+import bcrypt from 'bcrypt';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -43,24 +44,37 @@ const isLoggedIn = (req, res, next) => {
 };
 
 // Signup endpoint
-app.post('/api/signup', (req, res) => {
+app.post('/api/signup', async (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     return res.status(400).json({ message: 'Username and password are required' });
   }
-  const newUser = { id: Date.now().toString(), username, password };
-  users.push(newUser);
-  res.status(201).json({ message: 'User created', userId: newUser.id });
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const newUser = { id: Date.now().toString(), username, password: hashedPassword };
+    users.push(newUser);
+    res.status(201).json({ message: 'User created', userId: newUser.id });
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating user' });
+  }
 });
 
 // Login endpoint
-app.post('/api/login', (req, res) => {
+app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
-  const user = users.find(u => u.username === username && u.password === password);
+  const user = users.find(u => u.username === username);
   if (!user) {
     return res.status(401).json({ message: 'Invalid credentials' });
   }
-  res.json({ message: 'Login successful', userId: user.id });
+  try {
+    const match = await bcrypt.compare(password, user.password);
+    if (!match) {
+      return res.status(401).json({ message: 'Invalid credentials' });
+    }
+    res.json({ message: 'Login successful', userId: user.id });
+  } catch (err) {
+    res.status(500).json({ message: 'Error logging in' });
+  }
 });
 
 // Protected route example (logged-in users only)
