@@ -16,12 +16,12 @@ function Home() {
 
 function Products() {
   const initialProducts = [
-    { id: 1, title: 'Golf Club Set', price: 299.99, image: 'https://via.placeholder.com/150?text=Golf+Club+Set', category: 'Clubs' },
-    { id: 2, title: 'Golf Balls (12 Pack)', price: 24.99, image: 'https://via.placeholder.com/150?text=Golf+Balls', category: 'Balls' },
-    { id: 3, title: 'Golf Bag', price: 89.99, image: 'https://via.placeholder.com/150?text=Golf+Bag', category: 'Bags' },
-    { id: 4, title: 'Golf Gloves', price: 19.99, image: 'https://via.placeholder.com/150?text=Golf+Gloves', category: 'Accessories' },
-    { id: 5, title: 'Golf Shoes', price: 79.99, image: 'https://via.placeholder.com/150?text=Golf+Shoes', category: 'Apparel' },
-    { id: 6, title: 'Golf Hat', price: 14.99, image: 'https://via.placeholder.com/150?text=Golf+Hat', category: 'Apparel' },
+    { id: 1, title: 'Golf Club Set', price: 299.99, image: 'https://plus.unsplash.com/premium_photo-1678858024245-8a891b301ad3?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', category: 'Clubs' },
+    { id: 2, title: 'Golf Balls (12 Pack)', price: 24.99, image: 'https://images.unsplash.com/photo-1629673547133-c6e8486ee254?q=80&w=3456&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', category: 'Balls' },
+    { id: 3, title: 'Golf Bag', price: 89.99, image: 'https://images.unsplash.com/photo-1605465883066-373cd4360a80?q=80&w=3500&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', category: 'Bags' },
+    { id: 4, title: 'Golf Gloves', price: 19.99, image: 'https://images.unsplash.com/photo-1667247347419-a7199655b74c?q=80&w=3687&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', category: 'Accessories' },
+    { id: 5, title: 'Golf Shoes', price: 79.99, image: 'https://plus.unsplash.com/premium_photo-1712767020436-18875018fca3?q=80&w=3000&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', category: 'Apparel' },
+    { id: 6, title: 'Golf Hat', price: 14.99, image: 'https://images.unsplash.com/photo-1588850561407-ed78c282e89b?q=80&w=3436&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D', category: 'Apparel' },
   ];
   const [products, setProducts] = useState([]);
   const [sort, setSort] = useState('');
@@ -76,7 +76,7 @@ function Products() {
   return (
     <div className="container" aria-live="polite">
       <h2 tabIndex={0}>Products</h2>
-      <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
+      <div className="products-controls" style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
         <label>
           Sort by:
           <select value={sort} onChange={e => setSort(e.target.value)} aria-label="Sort products">
@@ -186,7 +186,7 @@ function Cart() {
       <h2>Your Cart</h2>
       {checkedOut && <div style={{ color: 'green', marginBottom: 10 }}>Order placed successfully!</div>}
       {error && <div style={{ color: 'red', marginBottom: 10 }}>{error}</div>}
-      {cart.length === 0 ? <p>Your cart is empty.</p> : (
+      {cart.length === 0 ? <p className="cart-empty-message">Your cart is empty.</p> : (
         <table style={{ width: '100%', background: 'white', borderRadius: 8, boxShadow: '0 2px 5px rgba(0,0,0,0.05)' }}>
           <thead>
             <tr>
