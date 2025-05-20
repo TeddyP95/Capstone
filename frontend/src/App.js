@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import logo from './logo.svg';
 import './App.css';
 import { loadStripe } from '@stripe/stripe-js';
@@ -230,11 +230,21 @@ function Cart() {
   );
 }
 
+function SignupSuccess() {
+  return (
+    <div className="container">
+      <h2>Signup Successful!</h2>
+      <p>Your account has been created. You can now <Link to="/login">log in</Link>.</p>
+    </div>
+  );
+}
+
 function Signup() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
   const [message, setMessage] = useState('');
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -248,6 +258,7 @@ function Signup() {
       const newUser = { id: Date.now().toString(), username, password, email, isAdmin: false };
       setAllUsers([newUser, ...users]);
       setMessage('User created');
+      setTimeout(() => navigate('/signup-success'), 1000);
     } catch (error) {
       setMessage('Error signing up');
     }
@@ -710,6 +721,7 @@ function AppContent() {
   const [username, setUsername] = useState('golfuser');
   const location = useLocation();
   const [admin, setAdmin] = useState(isAdmin());
+  const navigate = useNavigate();
 
   // Listen for login/logout/admin changes
   useEffect(() => {
@@ -780,6 +792,7 @@ function AppContent() {
         <Route path="/admin/orders" element={admin ? <AdminOrderManagement /> : <Navigate to="/" />} />
         <Route path="/admin/users" element={admin ? <AdminUserManagement /> : <Navigate to="/" />} />
         <Route path="/protected" element={<Protected />} />
+        <Route path="/signup-success" element={<SignupSuccess />} />
       </Routes>
     </>
   );
