@@ -47,7 +47,7 @@ function Products() {
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [initialProducts]);
+  }, []);
 
   // Sorting
   const sortedProducts = [...products].sort((a, b) => {
