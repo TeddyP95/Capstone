@@ -4,6 +4,8 @@ import logo from './logo.svg';
 import './App.css';
 import { loadStripe } from '@stripe/stripe-js';
 
+const API_BASE = "https://capstone-7kso.onrender.com";
+
 function Home() {
   return (
     <div className="home-hero">
@@ -163,7 +165,7 @@ function Cart() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch(`${API_BASE}/api/create-checkout-session`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ cart, userId }),
@@ -249,16 +251,16 @@ function Signup() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      // Store user in localStorage
-      const users = getAllUsers();
-      if (users.find(u => u.username === username)) {
-        setMessage('Username already exists');
-        return;
+      const response = await fetch(`${API_BASE}/api/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password }),
+      });
+      const data = await response.json();
+      setMessage(data.message);
+      if (data.userId) {
+        setTimeout(() => navigate('/signup-success'), 1000);
       }
-      const newUser = { id: Date.now().toString(), username, password, email, isAdmin: false };
-      setAllUsers([newUser, ...users]);
-      setMessage('User created');
-      setTimeout(() => navigate('/signup-success'), 1000);
     } catch (error) {
       setMessage('Error signing up');
     }
@@ -266,8 +268,9 @@ function Signup() {
 
   return (
     <div>
+      <h1 style={{ color: '#fff', fontSize: '3em', margin: '0.5em 0', textAlign: 'center', textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>Sign Up Here</h1>
       <h2>Signup</h2>
-      <form onSubmit={handleSubmit}>
+      <form className="signup-form" onSubmit={handleSubmit}>
         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="email" placeholder="Email" value={email} onChange={(e) => setEmail(e.target.value)} />
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
@@ -286,7 +289,7 @@ function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch('/api/login', {
+      const response = await fetch(`${API_BASE}/api/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password }),
@@ -303,8 +306,9 @@ function Login() {
 
   return (
     <div>
+      <h1 style={{ color: '#fff', fontSize: '3em', margin: '0.5em 0', textAlign: 'center', textShadow: '2px 2px 8px rgba(0,0,0,0.5)' }}>Login Here</h1>
       <h2>Login</h2>
-      <form onSubmit={handleSubmit}>
+      <form className="signup-form" onSubmit={handleSubmit}>
         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button type="submit">Login</button>
