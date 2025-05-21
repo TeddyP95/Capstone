@@ -98,7 +98,7 @@ function Products() {
       {loading && <div role="status" aria-busy="true" style={{textAlign:'center',margin:'2rem'}}><span>Loading products...</span></div>}
       {error && <div role="alert" style={{color:'red',textAlign:'center',margin:'2rem'}}>{error}</div>}
       {!loading && !error && (
-        <div className="product-grid">
+        <div className="product-grid" style={{ marginTop: '64px' }}>
           {filteredProducts.map(product => (
             <div key={product.id} className="product-card" tabIndex={0} aria-label={`Product: ${product.title}, Price: $${product.price}, Category: ${product.category}`}>
               <img src={product.image} alt={product.title} className="product-image" />
@@ -216,7 +216,7 @@ function Cart() {
           </tbody>
         </table>
       )}
-      <h3 style={{ textAlign: 'right', marginTop: 20 }}>Total: ${total.toFixed(2)}</h3>
+      <h3 className={cart.length === 0 ? 'cart-total-message' : ''} style={{ textAlign: 'right', marginTop: 20 }}>Total: ${total.toFixed(2)}</h3>
       {userId && cart.length > 0 && (
         <>
           <button style={{ float: 'right', marginTop: 20, marginLeft: 10 }} onClick={handleCheckout}>Checkout (Local)</button>
