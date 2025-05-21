@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
-import logo from './logo.svg';
+// import logo from './logo.svg'; // unused
 import './App.css';
-import { loadStripe } from '@stripe/stripe-js';
+// const loadStripe = ... // unused
 
 const API_BASE = "https://capstone-7kso.onrender.com";
 
@@ -116,9 +116,7 @@ function Products() {
   );
 }
 
-function Users() {
-  return <h2>Users</h2>;
-}
+// function Users() { return <h2>Users</h2>; } // unused
 
 function Cart() {
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem('cart')) || []);
